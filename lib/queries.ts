@@ -25,6 +25,7 @@ export interface DialogueSentence {
   id: string;
   lesson_id: string;
   order_index: number;
+  speaker: string | null;           // NEW: tên nhân vật
   chinese_text: string;
   pinyin: string;
   vietnamese_text: string;
@@ -39,6 +40,9 @@ export interface Vocabulary {
   pinyin: string;
   meaning: string;
   audio_url: string | null;
+  example_sentence: string | null;
+  example_pinyin: string | null;
+  example_meaning: string | null;
   created_at: string;
 }
 
@@ -49,6 +53,8 @@ export interface SentencePattern {
   pinyin: string;
   vietnamese_text: string;
   audio_url: string | null;
+  analysis: string | null;          // NEW: giải thích ngữ pháp
+  parts: { text: string; label: string }[] | null;  // NEW: phân tích thành phần
   created_at: string;
 }
 
@@ -59,20 +65,24 @@ export interface LessonDetail {
   sentencePatterns: SentencePattern[];
 }
 
+// Vocab exercise: đã đổi sang lưu trực tiếp text
 export interface VocabExercise {
   id: string;
   lesson_id: string;
-  sentence_with_blank: string;
-  correct_word_id: string;
-  wrong_choices: string[]; // parsed from jsonb
+  chinese_word: string;             // CHANGED
+  pinyin: string;                   // NEW
+  correct_answer: string;           // CHANGED
+  wrong_choices: string[];          // parsed from jsonb
   created_at: string;
 }
 
 export interface SentenceExercise {
   id: string;
   lesson_id: string;
+  prompt: string;                   // NEW: câu gợi ý tiếng Việt
+  pinyin: string;                   // NEW: pinyin đáp án
   correct_sentence: string;
-  scrambled_words: string[]; // parsed from jsonb
+  scrambled_words: string[];        // parsed from jsonb
   created_at: string;
 }
 
