@@ -79,6 +79,13 @@ export default function LessonsListClient({
               {isCompleted ? (
                 <>
                   <Link 
+                    href={`/lessons/${lesson.id}/shadowing`}
+                    className="flex items-center justify-center gap-2 bg-transparent border border-[#D4AF37]/40 text-[#D4AF37] font-semibold text-[13px] px-3 py-1.5 rounded-xl transition-all hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] active:translate-y-0.5"
+                    title="Luyện Shadowing"
+                  >
+                    <span className="text-base leading-none">🗣️</span> <span className="hidden sm:inline">Shadowing</span>
+                  </Link>
+                  <Link 
                     href={`/lessons/${lesson.id}/translation`}
                     className="flex items-center justify-center gap-2 bg-transparent border border-[#D4AF37]/40 text-[#D4AF37] font-semibold text-[13px] px-3 py-1.5 rounded-xl transition-all hover:bg-[#D4AF37]/10 hover:border-[#D4AF37] active:translate-y-0.5"
                     title="Luyện dịch câu"
@@ -95,6 +102,13 @@ export default function LessonsListClient({
                 </>
               ) : (
                 <>
+                  <button 
+                    disabled
+                    className="flex items-center justify-center gap-2 bg-transparent border border-[#D4AF37]/20 text-[#D4AF37]/40 font-semibold text-[13px] px-3 py-1.5 rounded-xl cursor-not-allowed"
+                    title="Hoàn thành bài học để mở khóa Shadowing"
+                  >
+                    <span className="text-base leading-none grayscale opacity-40">🗣️</span> <span className="hidden sm:inline">Shadowing</span>
+                  </button>
                   <button 
                     disabled
                     className="flex items-center justify-center gap-2 bg-transparent border border-[#D4AF37]/20 text-[#D4AF37]/40 font-semibold text-[13px] px-3 py-1.5 rounded-xl cursor-not-allowed"
