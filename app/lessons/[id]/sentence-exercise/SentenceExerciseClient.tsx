@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SentenceExercise } from "@/lib/queries";
 
+const cleanStr = (str: string) => str.replace(/[\s.,?!。？！，、：；“”‘’]/g, '');
+
 export default function SentenceExerciseClient({
   exercises,
   lessonId,
@@ -94,11 +96,10 @@ export default function SentenceExerciseClient({
 
   const handleCheck = () => {
     setHasChecked(true);
-    // So sánh chuỗi do user ghép với chuỗi đúng
+    // So sánh chuỗi do user ghép với chuỗi đúng (bỏ qua dấu câu và khoảng trắng)
     const userSentence = selectedWords.map(w => w.text).join('');
-    // Xóa khoảng trắng để so sánh phòng trường hợp chuỗi đúng có hoặc không có dấu cách
-    const correctCleaned = currentExercise.correct_sentence.replace(/\s+/g, '');
-    const userCleaned = userSentence.replace(/\s+/g, '');
+    const userCleaned = cleanStr(userSentence);
+    const correctCleaned = cleanStr(currentExercise.correct_sentence);
     
     if (userCleaned === correctCleaned) {
       setScore(s => s + 1);
@@ -116,8 +117,8 @@ export default function SentenceExerciseClient({
   const progress = ((currentIndex) / exercises.length) * 100;
 
   // Xác định xem user xếp đúng hay sai (chỉ tính khi đã ấn check)
-  const userCleaned = selectedWords.map(w => w.text).join('').replace(/\s+/g, '');
-  const correctCleaned = currentExercise.correct_sentence.replace(/\s+/g, '');
+  const userCleaned = cleanStr(selectedWords.map(w => w.text).join(''));
+  const correctCleaned = cleanStr(currentExercise.correct_sentence);
   const isCorrect = userCleaned === correctCleaned;
 
   return (
@@ -147,7 +148,7 @@ export default function SentenceExerciseClient({
             !hasChecked 
               ? "border-dashed border-[#EFE4CE] dark:border-white/20 bg-[#FBF6EC]/50 dark:bg-white/5" 
               : isCorrect 
-                ? "border-[#2E5B53] bg-[#2E5B53]/10" 
+                ? "border-[#16A34A] bg-[#16A34A]/10" 
                 : "border-[#C1272D] bg-[#C1272D]/10"
           }`}
         >
@@ -161,7 +162,7 @@ export default function SentenceExerciseClient({
               disabled={hasChecked}
               className={`px-4 py-2 text-[18px] font-bold rounded-xl shadow-sm transition-transform active:scale-95 ${
                 hasChecked && isCorrect 
-                  ? "bg-[#2E5B53] text-white" 
+                  ? "bg-[#16A34A] text-white" 
                   : hasChecked && !isCorrect 
                     ? "bg-[#C1272D] text-white" 
                     : "bg-[#C1272D] text-[#FFF6E4] hover:bg-[#A21E23]"
@@ -208,7 +209,11 @@ export default function SentenceExerciseClient({
           ) : (
             <button
               onClick={handleNext}
-              className="w-full py-4 bg-[#D4AF37] text-white font-bold text-[17px] rounded-[18px] shadow-[0_4px_12px_rgba(212,175,55,0.3)] hover:-translate-y-0.5 transition-all"
+              className={`w-full py-4 text-white font-bold text-[17px] rounded-[18px] hover:-translate-y-0.5 transition-all ${
+                isCorrect 
+                  ? "bg-[#16A34A] shadow-[0_4px_12px_rgba(22,163,74,0.3)]" 
+                  : "bg-[#C1272D] shadow-[0_4px_12px_rgba(193,39,45,0.3)]"
+              }`}
             >
               {currentIndex < exercises.length - 1 ? "Câu tiếp theo" : "Xem kết quả"}
             </button>
