@@ -29,6 +29,8 @@ export interface DialogueSentence {
   chinese_text: string;
   pinyin: string;
   vietnamese_text: string;
+  accepted_chinese: string[] | null;
+  accepted_vietnamese: string[] | null;
   audio_url: string | null;
   created_at: string;
 }
