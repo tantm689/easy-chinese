@@ -82,8 +82,8 @@ export default async function DialoguePage({
           </div>
         </div>
 
-        {/* Dialogue list */}
-        <DialogueClient sentences={dialogueSentences} />
+        {/* Dialogue View */}
+        <DialogueClient sentences={dialogueSentences} lessonId={id} />
 
         {/* Next button */}
         <Link 

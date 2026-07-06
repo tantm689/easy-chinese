@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { DialogueSentence } from "@/lib/queries";
+import { DialogueSentence, updateLessonProgress } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
 
 const avatarColors = [
   { bg: "#C1272D", text: "#FFF3DC" },
@@ -12,12 +13,25 @@ const avatarColors = [
 
 export default function DialogueClient({
   sentences,
+  lessonId,
 }: {
   sentences: DialogueSentence[];
+  lessonId: string;
 }) {
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Ghi nhận tiến độ "in_progress" khi bắt đầu học
+  useEffect(() => {
+    const initProgress = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await updateLessonProgress(lessonId, 'in_progress', session.user.id);
+      }
+    };
+    initProgress();
+  }, [lessonId]);
 
   // Toggles for UI
   const [showChinese, setShowChinese] = useState(true);

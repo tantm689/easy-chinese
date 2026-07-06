@@ -86,6 +86,13 @@ export interface SentenceExercise {
   created_at: string;
 }
 
+export interface UserProgress {
+  id: string;
+  user_id: string;
+  lesson_id: string;
+  status: 'in_progress' | 'completed';
+  completed_at: string | null;
+}
 
 // ==========================================
 // Queries
@@ -102,6 +109,18 @@ export async function getTopics(): Promise<Topic[]> {
   }
 
   return data as Topic[];
+}
+
+export async function getAllLessons(): Promise<Lesson[]> {
+  const { data, error } = await supabase
+    .from('lessons')
+    .select('*');
+
+  if (error) {
+    throw new Error(`Error fetching all lessons: ${error.message}`);
+  }
+
+  return data as Lesson[];
 }
 
 export async function getLessonsByTopic(topicId: string): Promise<Lesson[]> {
@@ -163,4 +182,50 @@ export async function getSentenceExercises(lessonId: string): Promise<SentenceEx
   }
 
   return data as SentenceExercise[];
+}
+
+export async function updateLessonProgress(lessonId: string, status: 'in_progress' | 'completed', userId: string) {
+  // Check current status to avoid reverting 'completed' to 'in_progress'
+  const { data: current } = await supabase
+    .from('user_progress')
+    .select('status')
+    .eq('user_id', userId)
+    .eq('lesson_id', lessonId)
+    .single();
+
+  if (current?.status === 'completed' && status === 'in_progress') {
+    return;
+  }
+
+  const payload: any = {
+    user_id: userId,
+    lesson_id: lessonId,
+    status: status
+  };
+
+  if (status === 'completed') {
+    payload.completed_at = new Date().toISOString();
+  }
+
+  const { error } = await supabase
+    .from('user_progress')
+    .upsert(payload, { onConflict: 'user_id, lesson_id' });
+
+  if (error) {
+    console.error('Error updating lesson progress:', error);
+  }
+}
+
+export async function getUserProgressOverview(userId: string): Promise<UserProgress[]> {
+  const { data, error } = await supabase
+    .from('user_progress')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Error fetching user progress:', error);
+    return [];
+  }
+
+  return data as UserProgress[];
 }

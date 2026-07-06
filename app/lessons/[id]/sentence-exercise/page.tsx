@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSentenceExercises, getLessonDetail } from "@/lib/queries";
 import SentenceExerciseClient from "./SentenceExerciseClient";
+import CompleteLessonButton from "./CompleteLessonButton";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -92,12 +93,7 @@ export default async function SentenceExercisePage({
           >
             ← Quay lại
           </Link>
-          <Link 
-            href={`/topics`}
-            className="flex items-center justify-center gap-2.5 bg-[#C1272D] text-[#FFF6E4] font-bold text-[17px] p-[17px] rounded-[18px] shadow-[0_10px_24px_rgba(193,39,45,0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(193,39,45,0.34)] active:translate-y-0"
-          >
-            Hoàn thành bài học 🎉
-          </Link>
+          <CompleteLessonButton lessonId={id} />
         </div>
       </div>
     </div>
