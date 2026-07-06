@@ -76,7 +76,7 @@ export default async function VocabularyPage({
         </div>
 
         {/* Vocabulary list */}
-        <VocabularyClient vocabulary={vocabulary} />
+        <VocabularyClient vocabulary={vocabulary} lessonId={id} />
 
         {/* Next & Prev buttons */}
         <div className="grid grid-cols-2 gap-4 mt-[30px]">

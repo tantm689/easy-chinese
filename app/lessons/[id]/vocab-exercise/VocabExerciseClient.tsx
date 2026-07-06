@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { VocabExercise } from "@/lib/queries";
+import { markStepVisited } from "@/lib/progressUtils";
 
 export default function VocabExerciseClient({
   exercises,
@@ -19,6 +20,10 @@ export default function VocabExerciseClient({
   const [isFinished, setIsFinished] = useState(false);
 
   const currentExercise = exercises[currentIndex];
+
+  useEffect(() => {
+    markStepVisited(lessonId, "vocab-exercise");
+  }, [lessonId]);
 
   useEffect(() => {
     if (!currentExercise) return;

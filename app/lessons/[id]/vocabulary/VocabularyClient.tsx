@@ -2,14 +2,21 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Vocabulary } from "@/lib/queries";
+import { markStepVisited } from "@/lib/progressUtils";
 
 export default function VocabularyClient({
   vocabulary,
+  lessonId,
 }: {
   vocabulary: Vocabulary[];
+  lessonId: string;
 }) {
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    markStepVisited(lessonId, "vocabulary");
+  }, [lessonId]);
 
   useEffect(() => {
     if (playingIndex !== null) {

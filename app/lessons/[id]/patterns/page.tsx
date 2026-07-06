@@ -76,7 +76,7 @@ export default async function PatternsPage({
         </div>
 
         {/* Patterns list */}
-        <PatternsClient patterns={sentencePatterns} />
+        <PatternsClient patterns={sentencePatterns} lessonId={id} />
 
         {/* Next & Prev buttons */}
         <div className="grid grid-cols-2 gap-4 mt-[30px]">

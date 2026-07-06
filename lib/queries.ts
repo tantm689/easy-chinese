@@ -94,6 +94,15 @@ export interface UserProgress {
   completed_at: string | null;
 }
 
+export interface FlashcardItem {
+  id: string;
+  front_zh: string;
+  front_py: string;
+  back_vi: string;
+  audio_url: string | null;
+  type: 'vocabulary' | 'pattern';
+}
+
 // ==========================================
 // Queries
 // ==========================================
@@ -228,4 +237,40 @@ export async function getUserProgressOverview(userId: string): Promise<UserProgr
   }
 
   return data as UserProgress[];
+}
+
+export async function getFlashcardData(lessonId: string): Promise<FlashcardItem[]> {
+  const [vocabResponse, patternResponse] = await Promise.all([
+    supabase.from('vocabulary').select('*').eq('lesson_id', lessonId).order('created_at'),
+    supabase.from('sentence_patterns').select('*').eq('lesson_id', lessonId).order('created_at')
+  ]);
+
+  if (vocabResponse.error) throw new Error(vocabResponse.error.message);
+  if (patternResponse.error) throw new Error(patternResponse.error.message);
+
+  const flashcards: FlashcardItem[] = [];
+
+  vocabResponse.data.forEach((v: any) => {
+    flashcards.push({
+      id: v.id,
+      front_zh: v.chinese_word,
+      front_py: v.pinyin,
+      back_vi: v.meaning,
+      audio_url: v.audio_url,
+      type: 'vocabulary'
+    });
+  });
+
+  patternResponse.data.forEach((p: any) => {
+    flashcards.push({
+      id: p.id,
+      front_zh: p.chinese_text,
+      front_py: p.pinyin,
+      back_vi: p.vietnamese_text,
+      audio_url: p.audio_url,
+      type: 'pattern'
+    });
+  });
+
+  return flashcards;
 }

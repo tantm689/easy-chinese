@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { DialogueSentence, updateLessonProgress } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
+import { markStepVisited } from "@/lib/progressUtils";
 
 const avatarColors = [
   { bg: "#C1272D", text: "#FFF3DC" },
@@ -29,6 +30,8 @@ export default function DialogueClient({
       if (session?.user) {
         await updateLessonProgress(lessonId, 'in_progress', session.user.id);
       }
+      // Ghi nhận đã xem bước Bài khóa
+      markStepVisited(lessonId, "dialogue");
     };
     initProgress();
   }, [lessonId]);

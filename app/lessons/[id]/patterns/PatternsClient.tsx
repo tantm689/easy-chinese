@@ -2,14 +2,22 @@
 
 import { useState, useRef, useEffect } from "react";
 import { SentencePattern } from "@/lib/queries";
+import { markStepVisited } from "@/lib/progressUtils";
 
 export default function PatternsClient({
   patterns,
+  lessonId,
 }: {
   patterns: SentencePattern[];
+  lessonId: string;
 }) {
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    markStepVisited(lessonId, "patterns");
+  }, [lessonId]);
+
   useEffect(() => {
     if (playingIndex !== null) {
       const url = patterns[playingIndex]?.audio_url;
