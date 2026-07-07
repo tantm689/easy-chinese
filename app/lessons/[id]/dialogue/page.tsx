@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getLessonDetail } from "@/lib/queries";
 import { notFound } from "next/navigation";
 import DialogueClient from "./DialogueClient";
+import { formatSpeakerName } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -43,9 +44,12 @@ export default async function DialoguePage({
         
         {/* Top bar: progress */}
         <div className="sticky top-0 z-20 pt-5 pb-3.5 bg-gradient-to-b from-[#FBF6EC] to-[#FBF6EC]/0 dark:from-background dark:to-transparent">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-[34px] h-[34px] rounded-[11px] bg-[#C1272D] text-[#F6D98B] flex items-center justify-center font-serif font-bold text-[19px] shadow-[0_3px_10px_rgba(193,39,45,0.28)]">
+              <Link href={`/topics/${lesson.topic_id}/lessons`} className="text-foreground/70 hover:text-[#C1272D] transition-colors p-2 -ml-2 rounded-full hover:bg-[#C1272D]/10 flex-shrink-0">
+                <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              </Link>
+              <div className="w-[34px] h-[34px] rounded-xl bg-[#C1272D] text-white flex items-center justify-center font-bold shadow-md shadow-[#C1272D]/20">
                 课
               </div>
               <div className="font-bold text-[15px] tracking-wide">Bước 1/5 · Bài khóa</div>
@@ -70,7 +74,7 @@ export default async function DialoguePage({
             {/* Danh sách nhân vật — tự trích từ data */}
             {(() => {
               const speakerColors = ["#C1272D", "#D4AF37", "#2E5B53", "#8C4A5A"];
-              const speakers = [...new Set(dialogueSentences.map(s => s.speaker).filter(Boolean))];
+              const speakers = [...new Set(dialogueSentences.map(s => formatSpeakerName(s.speaker)).filter(Boolean))];
               return speakers.map((sp, i) => (
                 <div key={sp} className="flex items-center gap-[7px] text-[13px] font-semibold text-[#8A8071]">
                   <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: speakerColors[i % speakerColors.length] }}></span>
@@ -88,7 +92,7 @@ export default async function DialoguePage({
         {/* Next button */}
         <Link 
           href={`/lessons/${id}/vocabulary`}
-          className="flex items-center justify-center gap-2.5 mt-[30px] bg-[#C1272D] text-[#FFF6E4] font-bold text-[17px] p-[17px] rounded-[18px] shadow-[0_10px_24px_rgba(193,39,45,0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(193,39,45,0.34)] active:translate-y-0"
+          className="flex items-center justify-center gap-2.5 mt-[30px] w-full bg-[#C1272D] text-[#FFF6E4] font-bold text-[17px] p-[17px] rounded-[18px] shadow-[0_10px_24px_rgba(193,39,45,0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(193,39,45,0.34)] active:translate-y-0"
         >
           Tiếp theo <span className="text-[19px]">→</span>
         </Link>

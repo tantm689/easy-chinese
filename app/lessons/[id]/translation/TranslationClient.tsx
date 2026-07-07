@@ -133,7 +133,16 @@ export default function TranslationClient({
   }, [status, currentIndex, questions]);
 
   const normalize = (str: string) => {
-    return str.toLowerCase().replace(/[，。！？,.!?\s]/g, '').trim();
+    const puncMap: Record<string, string> = {
+      ',': '，',
+      '.': '。',
+      '!': '！',
+      '?': '？'
+    };
+    return str
+      .replace(/[,.!?]/g, m => puncMap[m] || m)
+      .toLowerCase()
+      .replace(/\s/g, '');
   };
 
   const handleCheckTyping = () => {

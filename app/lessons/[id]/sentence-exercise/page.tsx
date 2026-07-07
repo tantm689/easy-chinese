@@ -49,8 +49,11 @@ export default async function SentenceExercisePage({
         <div className="sticky top-0 z-20 pt-5 pb-3.5 bg-gradient-to-b from-[#FBF6EC] to-[#FBF6EC]/0 dark:from-background dark:to-transparent">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
+              <Link href={`/lessons/${id}/patterns`} className="text-foreground/70 hover:text-[#C1272D] transition-colors p-2 -ml-2 rounded-full hover:bg-[#C1272D]/10 flex-shrink-0">
+                <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              </Link>
               <div className="w-[34px] h-[34px] rounded-[11px] bg-[#C1272D] text-[#F6D98B] flex items-center justify-center font-serif font-bold text-[19px] shadow-[0_3px_10px_rgba(193,39,45,0.28)]">
-                测
+                练
               </div>
               <div className="font-bold text-[15px] tracking-wide">Bước 5/5 · Luyện câu</div>
             </div>
@@ -85,16 +88,8 @@ export default async function SentenceExercisePage({
           lessonId={id} 
         />
 
-        {/* Bottom Nav */}
-        <div className="grid grid-cols-2 gap-4 mt-[30px]">
-          <Link 
-            href={`/lessons/${id}/patterns`}
-            className="flex items-center justify-center gap-2.5 bg-[#FFFDF8] border-2 border-[#EFE4CE] text-[#C1272D] font-bold text-[17px] p-[15px] rounded-[18px] transition-all hover:bg-[#FBF6EC] active:translate-y-0.5"
-          >
-            ← Quay lại
-          </Link>
-          <CompleteLessonButton lessonId={id} />
-        </div>
+        {/* Complete button */}
+        <CompleteLessonButton lessonId={id} />
       </div>
     </div>
   );

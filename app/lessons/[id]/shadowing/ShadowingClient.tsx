@@ -317,8 +317,8 @@ export default function ShadowingClient({
           <div className="px-4 py-4 md:py-5 flex flex-col gap-4">
             
             <div className="flex items-center gap-3">
-              <Link href={`/topics/${lesson.topic_id}/lessons`} className="text-foreground/40 hover:text-[#C1272D] transition-colors p-2 -ml-2 rounded-full hover:bg-[#C1272D]/5 flex-shrink-0">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              <Link href={`/topics/${lesson.topic_id}/lessons`} className="text-foreground/70 hover:text-[#C1272D] transition-colors p-2 -ml-2 rounded-full hover:bg-[#C1272D]/5 flex-shrink-0">
+                <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
               </Link>
               <h1 className="font-bold text-lg text-foreground line-clamp-1">Shadowing: {lesson.title}</h1>
             </div>

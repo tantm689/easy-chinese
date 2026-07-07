@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
+import { checkAndUpdateStreak, getUserStats, getAvatarEmoji } from "@/lib/userStats";
 
 export default function AuthCheck({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [avatarEmoji, setAvatarEmoji] = useState("🐼");
 
   useEffect(() => {
     // Kiểm tra session hiện tại
@@ -18,6 +22,11 @@ export default function AuthCheck({ children }: { children: React.ReactNode }) {
         router.push("/login");
       } else {
         setUser(session.user);
+        // Update streak (runs only once per day per session)
+        await checkAndUpdateStreak(session.user.id);
+        // Fetch avatar for navbar
+        const stats = await getUserStats(session.user.id);
+        if (stats) setAvatarEmoji(getAvatarEmoji(stats.avatar));
       }
       setIsLoading(false);
     };
@@ -55,25 +64,38 @@ export default function AuthCheck({ children }: { children: React.ReactNode }) {
     return null; // Tránh flash nội dung trước khi redirect
   }
 
+  const displayName = user.email?.split("@")[0] || "User";
+
   return (
     <div className="min-h-screen bg-[#FBF6EC] dark:bg-background text-[#2B2622] dark:text-foreground">
       {/* Top Header cho các trang được bảo vệ */}
-      <header className="fixed top-0 w-full bg-[#FFFDF8]/90 dark:bg-[#1A1814]/90 backdrop-blur-sm border-b border-[#EFE4CE] dark:border-white/10 z-50">
+      <header className="fixed top-0 w-full bg-[#FFFDF8]/90 dark:bg-[#1A1814]/90 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.05)] z-50">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="font-serif font-bold text-[#C1272D] text-lg flex items-center gap-2">
+          <Link href="/topics" className="font-serif font-bold text-[#C1272D] text-lg flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="text-2xl drop-shadow-sm">🏮</span>
             Easy Chinese
-          </div>
+          </Link>
           
-          <div className="flex items-center gap-4">
-            <span className="text-[13px] font-medium text-[#7C7263] dark:text-white/60 hidden sm:inline-block">
-              {user.email}
-            </span>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/profile"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all hover:bg-[#C1272D]/5 ${
+                pathname === '/profile' ? 'bg-[#C1272D]/10' : ''
+              }`}
+            >
+              <span className="text-xl">{avatarEmoji}</span>
+              <span className="text-[13px] font-semibold text-[#5C5446] dark:text-white/70 hidden sm:inline-block max-w-[100px] truncate">
+                {displayName}
+              </span>
+            </Link>
             <button
               onClick={handleLogout}
-              className="text-[13px] font-bold text-[#C1272D] px-3 py-1.5 rounded-lg hover:bg-[#C1272D]/10 transition-colors"
+              className="flex items-center gap-1.5 text-[13px] font-bold text-[#C1272D] px-3 py-1.5 rounded-lg hover:bg-[#C1272D]/10 transition-colors"
             >
-              Đăng xuất
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden sm:inline">Đăng xuất</span>
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { formatSpeakerName } from "@/lib/utils";
 import { DialogueSentence, updateLessonProgress } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { markStepVisited } from "@/lib/progressUtils";
@@ -186,7 +187,7 @@ export default function DialogueClient({
       {/* Danh sách bài khóa */}
       <div className="flex flex-col gap-[14px]">
         {sentences.map((sentence, idx) => {
-          const speakerName = sentence.speaker || "A";
+          const speakerName = formatSpeakerName(sentence.speaker || "A");
           const initial = speakerName.charAt(0).toUpperCase();
           const style = getSpeakerStyle(speakerName);
           const isPlaying = playingIndex === idx;

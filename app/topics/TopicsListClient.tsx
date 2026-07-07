@@ -40,7 +40,8 @@ export default function TopicsListClient({
               acc[level].push(topic);
               return acc;
             }, {} as Record<string, typeof topics>)
-          ).map(([level, groupTopics]) => (
+          ).sort(([levelA], [levelB]) => levelA.localeCompare(levelB))
+          .map(([level, groupTopics]) => (
             <div key={level} className="animate-fade-in-up">
               <div className="flex items-center gap-4 mb-6">
                 <div className="h-px bg-black/5 dark:bg-white/10 flex-1"></div>

@@ -48,6 +48,9 @@ export default async function VocabExercisePage({
         <div className="sticky top-0 z-20 pt-5 pb-3.5 bg-gradient-to-b from-[#FBF6EC] to-[#FBF6EC]/0 dark:from-background dark:to-transparent">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
+              <Link href={`/lessons/${id}/vocabulary`} className="text-foreground/70 hover:text-[#C1272D] transition-colors p-2 -ml-2 rounded-full hover:bg-[#C1272D]/10 flex-shrink-0">
+                <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+              </Link>
               <div className="w-[34px] h-[34px] rounded-[11px] bg-[#C1272D] text-[#F6D98B] flex items-center justify-center font-serif font-bold text-[19px] shadow-[0_3px_10px_rgba(193,39,45,0.28)]">
                 练
               </div>
@@ -84,21 +87,13 @@ export default async function VocabExercisePage({
           lessonId={id} 
         />
 
-        {/* Next & Prev buttons */}
-        <div className="grid grid-cols-2 gap-4 mt-[30px]">
-          <Link 
-            href={`/lessons/${id}/vocabulary`}
-            className="flex items-center justify-center gap-2.5 bg-[#FFFDF8] border-2 border-[#EFE4CE] text-[#C1272D] font-bold text-[17px] p-[15px] rounded-[18px] transition-all hover:bg-[#FBF6EC] active:translate-y-0.5"
-          >
-            ← Quay lại
-          </Link>
-          <Link 
-            href={`/lessons/${id}/patterns`}
-            className="flex items-center justify-center gap-2.5 bg-[#C1272D] text-[#FFF6E4] font-bold text-[17px] p-[17px] rounded-[18px] shadow-[0_10px_24px_rgba(193,39,45,0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(193,39,45,0.34)] active:translate-y-0"
-          >
-            Tiếp theo <span className="text-[19px]">→</span>
-          </Link>
-        </div>
+        {/* Next button */}
+        <Link 
+          href={`/lessons/${id}/patterns`}
+          className="flex items-center justify-center gap-2.5 w-full mt-[30px] bg-[#C1272D] text-[#FFF6E4] font-bold text-[17px] p-[17px] rounded-[18px] shadow-[0_10px_24px_rgba(193,39,45,0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(193,39,45,0.34)] active:translate-y-0"
+        >
+          Tiếp theo <span className="text-[19px]">→</span>
+        </Link>
         <div className="text-center mt-3 text-[13px] text-[#A89C88] font-semibold">Tiếp theo: Câu mẫu</div>
 
       </div>
