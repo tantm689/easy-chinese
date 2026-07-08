@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { SentencePattern } from "@/lib/queries";
 import { markStepVisited } from "@/lib/progressUtils";
+import PronunciationCheck from "@/components/PronunciationCheck";
 
 export default function PatternsClient({
   patterns,
@@ -12,6 +13,7 @@ export default function PatternsClient({
   lessonId: string;
 }) {
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [activePronunciationId, setActivePronunciationId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function PatternsClient({
 
   const playIndividual = (index: number, e: React.MouseEvent) => {
     e.preventDefault();
+    setActivePronunciationId(null);
     if (playingIndex === index) {
       setPlayingIndex(null);
     } else {
@@ -105,6 +108,16 @@ export default function PatternsClient({
                     <svg width="18" height="20" viewBox="0 0 16 18" fill="currentColor"><path d="M2 1.5c0-.9 1-1.5 1.8-1L14 6.5c.8.5.8 1.7 0 2.2L3.8 15c-.8.5-1.8-.1-1.8-1V1.5z" transform="translate(0 .5)"/></svg>
                   )}
                 </button>
+              </div>
+
+              {/* Pronunciation Check */}
+              <div className="mt-4 flex justify-end">
+                <PronunciationCheck 
+                  targetText={pattern.chinese_text}
+                  isActive={activePronunciationId === pattern.id}
+                  onStart={() => setActivePronunciationId(pattern.id)}
+                  mode="sentence"
+                />
               </div>
 
               {pattern.analysis && (

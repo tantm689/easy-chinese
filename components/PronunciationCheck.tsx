@@ -23,6 +23,12 @@ const normalizeText = (text: string) => {
     .toLowerCase();
 };
 
+const isCharMatch = (t: string, p: string) => {
+  if (t === p) return true;
+  if (!t || !p) return false;
+  return pinyin(t, { toneType: 'symbol' }) === pinyin(p, { toneType: 'symbol' });
+};
+
 const levenshteinDistance = (a: string, b: string) => {
   if (a.length === 0) return b.length;
   if (b.length === 0) return a.length;
@@ -33,7 +39,7 @@ const levenshteinDistance = (a: string, b: string) => {
   
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      const cost = isCharMatch(a[i - 1], b[j - 1]) ? 0 : 1;
       matrix[i][j] = Math.min(
         matrix[i - 1][j] + 1,
         matrix[i][j - 1] + 1,
@@ -120,23 +126,7 @@ export default function PronunciationCheck({
     
     if (onStart) onStart();
 
-    if (mode === 'word') {
-      let count = 3;
-      setCountdown(count);
-      const tick = () => {
-        count--;
-        if (count > 0) {
-          setCountdown(count);
-          timerRef.current = setTimeout(tick, 400);
-        } else {
-          setCountdown(null);
-          startRecognition();
-        }
-      };
-      timerRef.current = setTimeout(tick, 400);
-    } else {
-      startRecognition();
-    }
+    startRecognition();
   };
 
   const startRecognition = () => {
@@ -324,15 +314,15 @@ export default function PronunciationCheck({
                     {result.status === 'almost' && (mode === 'word' ? "Đúng âm nhưng sai thanh điệu, thử lại!" : "Gần đúng rồi, cố lên!")}
                     {result.status === 'incorrect' && "Chưa chính xác, thử lại nhé!"}
                   </div>
-                  {result.status !== 'correct' && mode === 'sentence' && (
+                  {mode === 'sentence' && (
                     <div className="text-[12px] font-medium text-foreground/40 mt-0.5">
-                      So sánh chi tiết điểm sai ở bên dưới
+                      {result.status === 'correct' ? "Chi tiết kết quả ở bên dưới" : "So sánh chi tiết điểm sai ở bên dưới"}
                     </div>
                   )}
                 </div>
               </div>
               
-              {mode === 'sentence' && result.status !== 'correct' && (
+              {mode === 'sentence' && (
                 <div className="bg-black/[0.03] dark:bg-white/[0.03] rounded-[16px] p-4 border border-black/5 dark:border-white/5">
                 <div className="flex flex-col gap-3.5">
                   
@@ -343,7 +333,7 @@ export default function PronunciationCheck({
                       {Array.from({ length: maxLen }).map((_, i) => {
                         const tChar = targetNorm[i];
                         const pChar = transcriptNorm[i];
-                        const isMatch = tChar === pChar;
+                        const isMatch = isCharMatch(tChar, pChar);
                         if (!tChar) return null;
                         return (
                           <span key={`t-${i}`} className={`px-1.5 py-0.5 rounded-[6px] transition-colors ${isMatch ? "text-foreground" : "text-[#C1272D] font-bold bg-[#C1272D]/10"}`}>
@@ -363,7 +353,7 @@ export default function PronunciationCheck({
                       {Array.from({ length: maxLen }).map((_, i) => {
                         const tChar = targetNorm[i];
                         const pChar = transcriptNorm[i];
-                        const isMatch = tChar === pChar;
+                        const isMatch = isCharMatch(tChar, pChar);
                         if (!pChar) return null;
                         return (
                           <span key={`p-${i}`} className={`px-1.5 py-0.5 rounded-[6px] transition-colors ${isMatch ? "text-foreground/70" : "text-[#C1272D] font-bold bg-[#C1272D]/10"}`}>
