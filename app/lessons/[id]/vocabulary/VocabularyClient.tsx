@@ -122,6 +122,7 @@ export default function VocabularyClient({
                   targetText={v.chinese_word} 
                   isActive={activePronunciationId === v.id}
                   onStart={() => setActivePronunciationId(v.id)}
+                  mode="word"
                 />
               </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { pinyin } from 'pinyin-pro';
 
 interface PronunciationCheckProps {
   targetText: string;
@@ -10,6 +11,7 @@ interface PronunciationCheckProps {
   absoluteResult?: boolean;
   isActive?: boolean;
   onStart?: () => void;
+  mode?: 'sentence' | 'word';
 }
 
 const normalizeText = (text: string) => {
@@ -50,13 +52,21 @@ export default function PronunciationCheck({
   absoluteResult = false,
   isActive = true,
   onStart,
+  mode = 'sentence',
 }: PronunciationCheckProps) {
   const [isSupported, setIsSupported] = useState<boolean>(true);
   const [isListening, setIsListening] = useState<boolean>(false);
-  const [result, setResult] = useState<{ status: 'correct' | 'almost' | 'incorrect', text: string } | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [result, setResult] = useState<{ 
+    status: 'correct' | 'almost' | 'incorrect', 
+    text: string, 
+    targetPinyin?: string, 
+    transcriptPinyin?: string 
+  } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const statusRef = useRef<'idle' | 'listening' | 'result' | 'error' | 'aborted'>('idle');
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -69,6 +79,8 @@ export default function PronunciationCheck({
 
   // Reset state when targetText changes
   useEffect(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setCountdown(null);
     if (recognitionRef.current && isListening) {
       statusRef.current = 'aborted';
       try {
@@ -85,6 +97,8 @@ export default function PronunciationCheck({
   // Reset state when component becomes inactive
   useEffect(() => {
     if (!isActive) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setCountdown(null);
       if (recognitionRef.current && isListening) {
         statusRef.current = 'aborted';
         try {
@@ -106,6 +120,26 @@ export default function PronunciationCheck({
     
     if (onStart) onStart();
 
+    if (mode === 'word') {
+      let count = 3;
+      setCountdown(count);
+      const tick = () => {
+        count--;
+        if (count > 0) {
+          setCountdown(count);
+          timerRef.current = setTimeout(tick, 400);
+        } else {
+          setCountdown(null);
+          startRecognition();
+        }
+      };
+      timerRef.current = setTimeout(tick, 400);
+    } else {
+      startRecognition();
+    }
+  };
+
+  const startRecognition = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
@@ -125,19 +159,44 @@ export default function PronunciationCheck({
     recognition.onresult = (event: any) => {
       statusRef.current = 'result';
       const transcript = event.results[0][0].transcript;
-      const normTarget = normalizeText(targetText);
-      const normTranscript = normalizeText(transcript);
       
-      const dist = levenshteinDistance(normTarget, normTranscript);
-      const maxLen = Math.max(normTarget.length, normTranscript.length);
-      const accuracy = maxLen === 0 ? 0 : (maxLen - dist) / maxLen;
-      
-      if (accuracy === 1) {
-        setResult({ status: 'correct', text: transcript });
-      } else if (accuracy >= 0.6) {
-        setResult({ status: 'almost', text: transcript });
+      if (mode === 'word') {
+        const targetPinyinTone = pinyin(targetText, { toneType: 'symbol', type: 'array' }).join('');
+        const transPinyinTone = pinyin(transcript, { toneType: 'symbol', type: 'array' }).join('');
+        const targetPinyinNoTone = pinyin(targetText, { toneType: 'none', type: 'array' }).join('');
+        const transPinyinNoTone = pinyin(transcript, { toneType: 'none', type: 'array' }).join('');
+
+        if (targetPinyinTone === transPinyinTone) {
+          setResult({ status: 'correct', text: transcript });
+        } else if (targetPinyinNoTone === transPinyinNoTone) {
+          setResult({ 
+            status: 'almost', 
+            text: transcript,
+            targetPinyin: pinyin(targetText, { toneType: 'symbol' }),
+            transcriptPinyin: pinyin(transcript, { toneType: 'symbol' })
+          });
+        } else {
+          setResult({ 
+            status: 'incorrect', 
+            text: transcript,
+            transcriptPinyin: pinyin(transcript, { toneType: 'symbol' })
+          });
+        }
       } else {
-        setResult({ status: 'incorrect', text: transcript });
+        const normTarget = normalizeText(targetText);
+        const normTranscript = normalizeText(transcript);
+        
+        const dist = levenshteinDistance(normTarget, normTranscript);
+        const maxLen = Math.max(normTarget.length, normTranscript.length);
+        const accuracy = maxLen === 0 ? 0 : (maxLen - dist) / maxLen;
+        
+        if (accuracy === 1) {
+          setResult({ status: 'correct', text: transcript });
+        } else if (accuracy >= 0.6) {
+          setResult({ status: 'almost', text: transcript });
+        } else {
+          setResult({ status: 'incorrect', text: transcript });
+        }
       }
       setIsListening(false);
     };
@@ -179,6 +238,12 @@ export default function PronunciationCheck({
   };
 
   const handleStop = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setCountdown(null);
+
     if (recognitionRef.current) {
       statusRef.current = 'aborted';
       try {
@@ -197,11 +262,17 @@ export default function PronunciationCheck({
   return (
     <div className={`relative flex flex-col gap-2 ${className}`}>
       <div className="flex items-center gap-2">
-        {isListening ? (
+        {(isListening || countdown !== null) ? (
           <>
-            <div className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[14px] font-semibold text-sm transition-all border-2 bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37] animate-pulse ${buttonClassName}`}>
-              <span className="w-2 h-2 rounded-full bg-current animate-ping"></span>
-              Đang nghe...
+            <div className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[14px] font-semibold text-sm transition-all border-2 bg-[#D4AF37]/10 border-[#D4AF37] text-[#D4AF37] ${countdown === null ? 'animate-pulse' : ''} ${buttonClassName}`}>
+              {countdown !== null ? (
+                <>Chuẩn bị... {countdown}</>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-current animate-ping"></span>
+                  Đang nghe...
+                </>
+              )}
             </div>
             <button
               onClick={handleStop}
@@ -211,13 +282,15 @@ export default function PronunciationCheck({
             </button>
           </>
         ) : (
-          <button
-            onClick={handleStart}
-            className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[14px] font-semibold text-sm transition-all border-2 bg-transparent border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white ${buttonClassName}`}
-          >
-            {buttonLabel}
-          </button>
-        )}
+            <button
+              onClick={handleStart}
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[14px] font-semibold text-sm transition-all border-2 bg-transparent border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white ${buttonClassName}`}
+            >
+              {mode === 'word' && result 
+                ? (result.status === 'correct' ? "✅ Phát âm chính xác! luyện lại 🔄" : "❌ Chưa chính xác. Thử lại 🔄")
+                : buttonLabel}
+            </button>
+          )}
       </div>
 
       {/* Result Container */}
@@ -248,10 +321,10 @@ export default function PronunciationCheck({
                     result.status === 'correct' ? 'text-[#B89420]' : result.status === 'almost' ? 'text-[#C19B26]' : 'text-[#C1272D]'
                   }`}>
                     {result.status === 'correct' && "Phát âm chính xác!"}
-                    {result.status === 'almost' && "Gần đúng rồi, cố lên!"}
+                    {result.status === 'almost' && (mode === 'word' ? "Đúng âm nhưng sai thanh điệu, thử lại!" : "Gần đúng rồi, cố lên!")}
                     {result.status === 'incorrect' && "Chưa chính xác, thử lại nhé!"}
                   </div>
-                  {result.status !== 'correct' && (
+                  {result.status !== 'correct' && mode === 'sentence' && (
                     <div className="text-[12px] font-medium text-foreground/40 mt-0.5">
                       So sánh chi tiết điểm sai ở bên dưới
                     </div>
@@ -259,7 +332,8 @@ export default function PronunciationCheck({
                 </div>
               </div>
               
-              <div className="bg-black/[0.03] dark:bg-white/[0.03] rounded-[16px] p-4 border border-black/5 dark:border-white/5">
+              {mode === 'sentence' && result.status !== 'correct' && (
+                <div className="bg-black/[0.03] dark:bg-white/[0.03] rounded-[16px] p-4 border border-black/5 dark:border-white/5">
                 <div className="flex flex-col gap-3.5">
                   
                   {/* Target Row */}
@@ -302,6 +376,28 @@ export default function PronunciationCheck({
                   
                 </div>
               </div>
+              )}
+
+              {mode === 'word' && (
+                <div className="bg-black/[0.03] dark:bg-white/[0.03] rounded-[16px] px-5 py-3.5 border border-black/5 dark:border-white/5 flex flex-col gap-2">
+                  <div className="text-[13px] font-medium flex gap-3">
+                    <span className="text-foreground/40 uppercase font-bold w-12 text-right">Mẫu:</span>
+                    <span className="font-serif text-[16px] text-foreground">{result.targetPinyin || pinyin(targetText, { toneType: 'symbol' })}</span>
+                  </div>
+                  <div className="text-[13px] font-medium flex gap-3">
+                    <span className="text-foreground/40 uppercase font-bold w-12 text-right">Bạn đọc:</span>
+                    <span className={`font-serif text-[16px] font-bold ${result.status === 'correct' ? 'text-[#B89420]' : 'text-[#C1272D]'}`}>
+                      {result.transcriptPinyin || pinyin(result.text, { toneType: 'symbol' })}
+                    </span>
+                  </div>
+                  {result.status === 'incorrect' && (
+                    <div className="text-[13px] font-medium flex gap-3 opacity-60">
+                      <span className="text-foreground/40 uppercase font-bold w-12 text-right">Từ:</span>
+                      <span className="font-serif text-[16px]">{result.text}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
