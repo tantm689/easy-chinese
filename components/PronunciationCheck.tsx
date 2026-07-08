@@ -56,6 +56,7 @@ export default function PronunciationCheck({
   const [result, setResult] = useState<{ status: 'correct' | 'almost' | 'incorrect', text: string } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
+  const statusRef = useRef<'idle' | 'listening' | 'result' | 'error' | 'aborted'>('idle');
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -69,6 +70,7 @@ export default function PronunciationCheck({
   // Reset state when targetText changes
   useEffect(() => {
     if (recognitionRef.current && isListening) {
+      statusRef.current = 'aborted';
       try {
         recognitionRef.current.abort();
       } catch (e) {}
@@ -76,6 +78,7 @@ export default function PronunciationCheck({
     setResult(null);
     setErrorMsg(null);
     setIsListening(false);
+    statusRef.current = 'idle';
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetText]);
 
@@ -83,6 +86,7 @@ export default function PronunciationCheck({
   useEffect(() => {
     if (!isActive) {
       if (recognitionRef.current && isListening) {
+        statusRef.current = 'aborted';
         try {
           recognitionRef.current.abort();
         } catch (e) {}
@@ -90,6 +94,7 @@ export default function PronunciationCheck({
       setResult(null);
       setErrorMsg(null);
       setIsListening(false);
+      statusRef.current = 'idle';
     }
   }, [isActive]);
 
@@ -111,12 +116,14 @@ export default function PronunciationCheck({
     recognition.interimResults = false;
 
     recognition.onstart = () => {
+      statusRef.current = 'listening';
       setIsListening(true);
       setResult(null);
       setErrorMsg(null);
     };
 
     recognition.onresult = (event: any) => {
+      statusRef.current = 'result';
       const transcript = event.results[0][0].transcript;
       const normTarget = normalizeText(targetText);
       const normTranscript = normalizeText(transcript);
@@ -137,9 +144,11 @@ export default function PronunciationCheck({
 
     recognition.onerror = (event: any) => {
       if (event.error === 'aborted') {
+        statusRef.current = 'aborted';
         setIsListening(false);
         return;
       }
+      statusRef.current = 'error';
       setIsListening(false);
       if (event.error === 'not-allowed') {
         setErrorMsg("Không thể truy cập Micro. Vui lòng cấp quyền trong cài đặt trình duyệt.");
@@ -152,12 +161,18 @@ export default function PronunciationCheck({
 
     recognition.onend = () => {
       setIsListening(false);
+      if (statusRef.current === 'listening') {
+        // Recognition ended silently without result or error
+        statusRef.current = 'error';
+        setErrorMsg("Không nghe rõ, hãy thử lại nhé!");
+      }
     };
 
     try {
       recognition.start();
     } catch (e) {
       console.error(e);
+      statusRef.current = 'error';
       setIsListening(false);
       setErrorMsg("Không thể khởi động ghi âm.");
     }
@@ -165,6 +180,7 @@ export default function PronunciationCheck({
 
   const handleStop = () => {
     if (recognitionRef.current) {
+      statusRef.current = 'aborted';
       try {
         recognitionRef.current.abort();
       } catch (e) {}
