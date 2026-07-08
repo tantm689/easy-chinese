@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Vocabulary } from "@/lib/queries";
 import { markStepVisited } from "@/lib/progressUtils";
+import PronunciationCheck from "@/components/PronunciationCheck";
 
 export default function VocabularyClient({
   vocabulary,
@@ -111,6 +112,11 @@ export default function VocabularyClient({
                     <svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor"><path d="M2 1.5c0-.9 1-1.5 1.8-1L14 6.5c.8.5.8 1.7 0 2.2L3.8 15c-.8.5-1.8-.1-1.8-1V1.5z" transform="translate(0 .5)"/></svg>
                   )}
                 </button>
+              </div>
+
+              {/* Pronunciation Check */}
+              <div className="mt-3 flex justify-end">
+                <PronunciationCheck targetText={v.chinese_word} />
               </div>
 
               {v.example_sentence && (

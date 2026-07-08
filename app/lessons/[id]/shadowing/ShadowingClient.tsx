@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Lesson, DialogueSentence } from "@/lib/queries";
+import PronunciationCheck from "@/components/PronunciationCheck";
 
 export default function ShadowingClient({
   lesson,
@@ -439,6 +440,12 @@ export default function ShadowingClient({
                 <span className="text-xl">🎙️</span> GHI ÂM
               </button>
             )}
+            
+            <PronunciationCheck 
+              targetText={currentSentence.chinese_text}
+              buttonLabel={<><span className="text-xl">🎤</span> LUYỆN PHÁT ÂM</>}
+              buttonClassName="!px-10 !py-3.5 !rounded-2xl !font-bold !tracking-wide hover:-translate-y-0.5 w-full sm:w-auto"
+            />
             
           </div>
 
