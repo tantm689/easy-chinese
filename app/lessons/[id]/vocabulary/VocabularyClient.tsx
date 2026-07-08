@@ -13,6 +13,7 @@ export default function VocabularyClient({
   lessonId: string;
 }) {
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [activePronunciationId, setActivePronunciationId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function VocabularyClient({
 
   const playIndividual = (index: number, e: React.MouseEvent) => {
     e.preventDefault();
+    setActivePronunciationId(null);
     if (playingIndex === index) {
       setPlayingIndex(null);
     } else {
@@ -116,7 +118,11 @@ export default function VocabularyClient({
 
               {/* Pronunciation Check */}
               <div className="mt-3 flex justify-end">
-                <PronunciationCheck targetText={v.chinese_word} />
+                <PronunciationCheck 
+                  targetText={v.chinese_word} 
+                  isActive={activePronunciationId === v.id}
+                  onStart={() => setActivePronunciationId(v.id)}
+                />
               </div>
 
               {v.example_sentence && (

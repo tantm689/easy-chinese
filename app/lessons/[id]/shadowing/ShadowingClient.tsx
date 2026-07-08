@@ -443,8 +443,9 @@ export default function ShadowingClient({
             
             <PronunciationCheck 
               targetText={currentSentence.chinese_text}
-              buttonLabel={<><span className="text-xl">🎤</span> LUYỆN PHÁT ÂM</>}
+              buttonLabel={<><span className="text-xl">🎤</span> CHẤM PHÁT ÂM</>}
               buttonClassName="!px-10 !py-3.5 !rounded-2xl !font-bold !tracking-wide hover:-translate-y-0.5 w-full sm:w-auto"
+              absoluteResult={true}
             />
             
           </div>
