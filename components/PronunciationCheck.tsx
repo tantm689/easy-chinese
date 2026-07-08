@@ -382,18 +382,18 @@ export default function PronunciationCheck({
                 <div className="bg-black/[0.03] dark:bg-white/[0.03] rounded-[16px] px-5 py-3.5 border border-black/5 dark:border-white/5 flex flex-col gap-2">
                   <div className="text-[13px] font-medium flex gap-3">
                     <span className="text-foreground/40 uppercase font-bold w-12 text-right">Mẫu:</span>
-                    <span className="font-serif text-[16px] text-foreground">{result.targetPinyin || pinyin(targetText, { toneType: 'symbol' })}</span>
+                    <span className="font-sans text-[16px] text-foreground">{result.targetPinyin || pinyin(targetText, { toneType: 'symbol' })}</span>
                   </div>
                   <div className="text-[13px] font-medium flex gap-3">
                     <span className="text-foreground/40 uppercase font-bold w-12 text-right">Bạn đọc:</span>
-                    <span className={`font-serif text-[16px] font-bold ${result.status === 'correct' ? 'text-[#B89420]' : 'text-[#C1272D]'}`}>
+                    <span className={`font-sans text-[16px] font-bold ${result.status === 'correct' ? 'text-[#B89420]' : 'text-[#C1272D]'}`}>
                       {result.transcriptPinyin || pinyin(result.text, { toneType: 'symbol' })}
                     </span>
                   </div>
                   {result.status === 'incorrect' && (
                     <div className="text-[13px] font-medium flex gap-3 opacity-60">
                       <span className="text-foreground/40 uppercase font-bold w-12 text-right">Từ:</span>
-                      <span className="font-serif text-[16px]">{result.text}</span>
+                      <span className="font-sans text-[16px]">{result.text}</span>
                     </div>
                   )}
                 </div>
