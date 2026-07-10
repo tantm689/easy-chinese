@@ -78,6 +78,28 @@ export default function AuthCheck({ children }: { children: React.ReactNode }) {
           
           <div className="flex items-center gap-3">
             <Link
+              href="/notebook"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all hover:bg-[#C1272D]/5 ${
+                pathname === '/notebook' ? 'bg-[#C1272D]/10' : ''
+              }`}
+            >
+              <span className="text-xl">📓</span>
+              <span className="text-[13px] font-semibold text-[#5C5446] dark:text-white/70 hidden sm:inline-block">
+                Sổ tay
+              </span>
+            </Link>
+            <Link
+              href="/assistant"
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all hover:bg-[#C1272D]/5 ${
+                pathname === '/assistant' ? 'bg-[#C1272D]/10' : ''
+              }`}
+            >
+              <span className="text-xl">🤖</span>
+              <span className="text-[13px] font-semibold text-[#5C5446] dark:text-white/70 hidden sm:inline-block">
+                Trợ lý AI
+              </span>
+            </Link>
+            <Link
               href="/profile"
               className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all hover:bg-[#C1272D]/5 ${
                 pathname === '/profile' ? 'bg-[#C1272D]/10' : ''

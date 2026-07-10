@@ -36,7 +36,8 @@ export default function TranslationClient({
   const [status, setStatus] = useState<'typing' | 'checked' | 'finished'>('typing');
   const [isCorrect, setIsCorrect] = useState(false);
   const [score, setScore] = useState(0);
-  const [showPinyin, setShowPinyin] = useState(true);
+  const [showPinyin, setShowPinyin] = useState(false);
+  const [punctuationWarning, setPunctuationWarning] = useState<string | null>(null);
   
   const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -107,6 +108,7 @@ export default function TranslationClient({
           sourceText: s.vietnamese_text,
           targetText: s.chinese_text,
           pinyin: s.pinyin,
+          audioUrl: s.audio_url,
           sentence: s
         };
       }
@@ -124,6 +126,8 @@ export default function TranslationClient({
     setSelectedChoice(null);
     setStatus('typing');
     setScore(0);
+    setShowPinyin(false);
+    setPunctuationWarning(null);
   };
 
   useEffect(() => {
@@ -133,16 +137,12 @@ export default function TranslationClient({
   }, [status, currentIndex, questions]);
 
   const normalize = (str: string) => {
-    const puncMap: Record<string, string> = {
-      ',': '，',
-      '.': '。',
-      '!': '！',
-      '?': '？'
-    };
     return str
-      .replace(/[,.!?]/g, m => puncMap[m] || m)
       .toLowerCase()
-      .replace(/\s/g, '');
+      // Loại bỏ toàn bộ khoảng trắng
+      .replace(/\s/g, '')
+      // Loại bỏ toàn bộ dấu câu tiếng Anh và tiếng Trung
+      .replace(/[,.!?，。！？;；:：""''「」『』()（）<>《》\-~～]/g, '');
   };
 
   const handleCheckTyping = () => {
@@ -152,8 +152,39 @@ export default function TranslationClient({
     
     const isMatch = normalize(currentQ.targetText) === normalizedInput;
     
+    if (isMatch) {
+      const puncRegex = /[,.!?，。！？;；:：""''「」『』()（）<>《》\-~～]/g;
+      const targetPuncs = currentQ.targetText.match(puncRegex) || [];
+      const inputPuncs = userInput.match(puncRegex) || [];
+      
+      const missing = [];
+      const inputPuncsCopy = [...inputPuncs];
+      
+      for (const p of targetPuncs) {
+        const idx = inputPuncsCopy.indexOf(p);
+        if (idx !== -1) {
+          inputPuncsCopy.splice(idx, 1);
+        } else {
+          missing.push(p);
+        }
+      }
+      
+      const extra = inputPuncsCopy;
+      
+      if (missing.length > 0 || extra.length > 0) {
+        let warnParts = [];
+        if (missing.length > 0) warnParts.push(`thiếu dấu ${Array.from(new Set(missing)).join(' ')}`);
+        if (extra.length > 0) warnParts.push(`thừa/sai dấu ${Array.from(new Set(extra)).join(' ')}`);
+        setPunctuationWarning(`Chú ý: Bạn gõ ${warnParts.join(' và ')}`);
+      } else {
+        setPunctuationWarning(null);
+      }
+      setScore(s => s + 1);
+    } else {
+      setPunctuationWarning(null);
+    }
+    
     setIsCorrect(isMatch);
-    if (isMatch) setScore(s => s + 1);
     setStatus('checked');
   };
 
@@ -164,6 +195,7 @@ export default function TranslationClient({
     const isMatch = choice === currentQ.targetText;
     setIsCorrect(isMatch);
     if (isMatch) setScore(s => s + 1);
+    setPunctuationWarning(null);
     setStatus('checked');
   };
 
@@ -173,6 +205,8 @@ export default function TranslationClient({
       setUserInput("");
       setSelectedChoice(null);
       setStatus('typing');
+      setShowPinyin(false);
+      setPunctuationWarning(null);
     } else {
       setStatus('finished');
     }
@@ -338,17 +372,52 @@ export default function TranslationClient({
               {isTypingMode ? '🇻🇳 Dịch sang tiếng Trung' : '🇨🇳 Dịch sang tiếng Việt'}
             </span>
             
-            <div className="flex items-center gap-3 justify-center">
-              <h2 className="text-3xl md:text-4xl font-extrabold text-foreground leading-[1.4] tracking-tight">
-                {currentQ.sourceText}
-              </h2>
-              {!isTypingMode && currentQ.audioUrl && (
-                <button 
-                  onClick={playAudio}
-                  className="w-10 h-10 rounded-full bg-[#C1272D]/10 text-[#C1272D] flex items-center justify-center hover:bg-[#C1272D] hover:text-white transition-colors"
-                >
-                  <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.56.276 2.56-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 010-1.06z" /><path d="M15.932 7.757a.75.75 0 011.061 0 6 6 0 010 8.486.75.75 0 01-1.06-1.061 4.5 4.5 0 000-6.364.75.75 0 010-1.06z" /></svg>
-                </button>
+            <div className="flex flex-col items-center gap-4 justify-center">
+              <div className="flex items-center gap-3 justify-center">
+                <h2 className="text-3xl md:text-4xl font-extrabold text-foreground leading-[1.4] tracking-tight">
+                  {currentQ.sourceText}
+                </h2>
+                {!isTypingMode && currentQ.audioUrl && (
+                  <button 
+                    onClick={playAudio}
+                    className="w-10 h-10 rounded-full bg-[#C1272D]/10 text-[#C1272D] flex items-center justify-center hover:bg-[#C1272D] hover:text-white transition-colors shrink-0"
+                  >
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.56.276 2.56-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 010-1.06z" /><path d="M15.932 7.757a.75.75 0 011.061 0 6 6 0 010 8.486.75.75 0 01-1.06-1.061 4.5 4.5 0 000-6.364.75.75 0 010-1.06z" /></svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Hint Actions for VI_TO_ZH */}
+              {isTypingMode && (
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  {currentQ.audioUrl && (
+                    <button
+                      onClick={playAudio}
+                      className="px-4 py-2 rounded-full bg-[#C1272D]/10 text-[#C1272D] text-sm font-bold hover:bg-[#C1272D] hover:text-white transition-colors flex items-center gap-2 shadow-sm"
+                    >
+                      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.56.276 2.56-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 010-1.06z" /><path d="M15.932 7.757a.75.75 0 011.061 0 6 6 0 010 8.486.75.75 0 01-1.06-1.061 4.5 4.5 0 000-6.364.75.75 0 010-1.06z" /></svg>
+                      Nghe Audio
+                    </button>
+                  )}
+                  {!showPinyin && currentQ.pinyin && (
+                    <button
+                      onClick={() => setShowPinyin(true)}
+                      className="px-4 py-2 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-white text-sm font-bold transition-colors flex items-center gap-2 shadow-sm"
+                    >
+                      💡 Gợi ý Pinyin
+                    </button>
+                  )}
+                  {showPinyin && currentQ.pinyin && (
+                    <button
+                      onClick={() => setShowPinyin(false)}
+                      className="px-4 py-2 rounded-full bg-[#FFFDF8] dark:bg-[#25221c] border border-[#EFE4CE] dark:border-white/10 text-foreground/80 text-sm font-semibold tracking-wide shadow-sm hover:bg-[#FBF6EC] transition-colors flex items-center gap-2 group"
+                      title="Nhấn để ẩn Pinyin"
+                    >
+                      <span>{currentQ.pinyin}</span>
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="opacity-40 group-hover:opacity-100 transition-opacity"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -374,24 +443,6 @@ export default function TranslationClient({
                       : 'bg-[#C1272D]/5 border-[#C1272D] text-[#C1272D] shadow-[0_8px_30px_rgba(193,39,45,0.15)]'
                 }`}
               />
-              
-              {showPinyin && status === 'typing' && currentQ.pinyin && (
-                <div className="absolute bottom-6 left-8 right-8 text-center text-foreground/40 font-medium pointer-events-none tracking-wide">
-                  Gợi ý: {currentQ.pinyin}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-6 flex items-center gap-3 self-end px-4">
-              <label className="text-sm font-semibold text-foreground/60 cursor-pointer select-none">
-                Hiện gợi ý Pinyin
-              </label>
-              <button 
-                onClick={() => setShowPinyin(!showPinyin)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showPinyin ? 'bg-[#D4AF37]' : 'bg-black/20 dark:bg-white/20'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showPinyin ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
             </div>
           </div>
         ) : (
@@ -453,12 +504,12 @@ export default function TranslationClient({
         </div>
       ) : status !== 'typing' ? (
         <div className={`fixed bottom-0 left-0 right-0 p-6 sm:px-12 sm:py-8 border-t z-50 animate-slide-up flex justify-center ${
-          isCorrect ? 'bg-[#F2FBF5] dark:bg-[#4CAF50]/10 border-[#4CAF50]/20' : 'bg-[#FFF5F5] dark:bg-[#C1272D]/10 border-[#C1272D]/20'
+          isCorrect ? (punctuationWarning ? 'bg-[#FFFDF8] dark:bg-[#D4AF37]/10 border-[#D4AF37]/20' : 'bg-[#F2FBF5] dark:bg-[#4CAF50]/10 border-[#4CAF50]/20') : 'bg-[#FFF5F5] dark:bg-[#C1272D]/10 border-[#C1272D]/20'
         }`}>
           <div className="w-full max-w-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-start gap-4 flex-1">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-1 sm:mt-0 ${
-                isCorrect ? 'bg-[#4CAF50] text-white' : 'bg-[#C1272D] text-white'
+                isCorrect ? (punctuationWarning ? 'bg-[#D4AF37] text-white' : 'bg-[#4CAF50] text-white') : 'bg-[#C1272D] text-white'
               }`}>
                 {isCorrect ? (
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -467,15 +518,31 @@ export default function TranslationClient({
                 )}
               </div>
               <div>
-                <h3 className={`text-2xl font-bold mb-1 ${isCorrect ? 'text-[#4CAF50]' : 'text-[#C1272D]'}`}>
-                  {isCorrect ? 'Chính xác!' : 'Chưa đúng'}
+                <h3 className={`text-2xl font-bold mb-1 ${isCorrect ? (punctuationWarning ? 'text-[#D4AF37]' : 'text-[#4CAF50]') : 'text-[#C1272D]'}`}>
+                  {isCorrect ? (punctuationWarning ? 'Gần đúng!' : 'Chính xác!') : 'Chưa đúng'}
                 </h3>
+                
+                {punctuationWarning && (
+                  <div className="mt-1 space-y-1">
+                    <p className="text-[#D4AF37] font-medium">{punctuationWarning}</p>
+                    <p className="text-foreground/70 text-sm">
+                      Đáp án đầy đủ: <span className="font-bold text-[#D4AF37] text-base">{currentQ.targetText}</span>
+                    </p>
+                  </div>
+                )}
                 
                 {!isCorrect && isTypingMode && (
                   <div className="space-y-1">
                     <p className="text-foreground/80 font-medium">Đáp án đúng:</p>
                     <p className="text-2xl font-bold text-[#C1272D] tracking-wide">{currentQ.targetText}</p>
                     <p className="text-foreground/60">Pinyin: {currentQ.pinyin}</p>
+                  </div>
+                )}
+
+                {isCorrect && !punctuationWarning && isTypingMode && (
+                  <div className="space-y-1 mt-2">
+                    <p className="text-2xl font-bold text-[#4CAF50] tracking-wide">{currentQ.targetText}</p>
+                    <p className="text-[#4CAF50]/80">Pinyin: {currentQ.pinyin}</p>
                   </div>
                 )}
               </div>
